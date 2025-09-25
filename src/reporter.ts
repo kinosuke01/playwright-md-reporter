@@ -34,7 +34,8 @@ class MarkdownReporter implements Reporter {
 
     this.outputDir = this.options.outputDir ?? "playwright-md-report";
     this.dataDir = path.join(this.outputDir, "screenshots");
-    this.generateUUID = this.options.generateUUID || (() => crypto.randomUUID());
+    this.generateUUID =
+      this.options.generateUUID || (() => crypto.randomUUID());
   }
 
   onBegin(_config: FullConfig, suite: Suite) {

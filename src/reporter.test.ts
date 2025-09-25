@@ -1,7 +1,6 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type {
   FullConfig,
   FullResult,
@@ -9,6 +8,7 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import MarkdownReporter from "./reporter";
 
 describe("MarkdownReporter", () => {
@@ -58,6 +58,7 @@ describe("MarkdownReporter", () => {
       projects: [],
       shard: null,
       updateSnapshots: "missing",
+      updateSourceMethod: "patch",
       version: "1.40.0",
       workers: 4,
       webServer: null,
@@ -79,6 +80,11 @@ describe("MarkdownReporter", () => {
       expectedStatus: "passed",
       annotations: [],
       tags: [],
+      ok: () => true,
+      outcome: () => "expected",
+      titlePath: () => ["Login Tests", "should login successfully"],
+      results: [],
+      type: "test",
     };
 
     // Mock data for TestResult
@@ -92,6 +98,8 @@ describe("MarkdownReporter", () => {
       error: undefined,
       stdout: [],
       stderr: [],
+      annotations: [],
+      startTime: new Date(),
       attachments: [
         {
           name: "screenshot",
@@ -107,6 +115,9 @@ describe("MarkdownReporter", () => {
           duration: 500,
           error: undefined,
           steps: [],
+          titlePath: () => ["Navigate to login page"],
+          annotations: [],
+          attachments: [],
         },
         {
           title: "Fill username and password",
@@ -122,6 +133,9 @@ describe("MarkdownReporter", () => {
               duration: 150,
               error: undefined,
               steps: [],
+              titlePath: () => ["Fill username and password", "Type username"],
+              annotations: [],
+              attachments: [],
             },
             {
               title: "Type password",
@@ -130,8 +144,14 @@ describe("MarkdownReporter", () => {
               duration: 150,
               error: undefined,
               steps: [],
+              titlePath: () => ["Fill username and password", "Type password"],
+              annotations: [],
+              attachments: [],
             },
           ],
+          titlePath: () => ["Fill username and password"],
+          annotations: [],
+          attachments: [],
         },
         {
           title: "Click login button",
@@ -140,6 +160,9 @@ describe("MarkdownReporter", () => {
           duration: 700,
           error: undefined,
           steps: [],
+          titlePath: () => ["Click login button"],
+          annotations: [],
+          attachments: [],
         },
       ],
     };
@@ -150,8 +173,11 @@ describe("MarkdownReporter", () => {
       suites: [],
       tests: [mockTestCase],
       parent: undefined,
-      project: undefined,
+      project: () => undefined,
       allTests: () => [mockTestCase],
+      entries: () => [mockTestCase],
+      titlePath: () => ["Login Tests"],
+      type: "describe",
     };
 
     // Mock data for FullResult
