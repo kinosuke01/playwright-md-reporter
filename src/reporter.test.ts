@@ -200,40 +200,22 @@ describe("MarkdownReporter", () => {
     // Read and verify the markdown content
     const markdownContent = fs.readFileSync(reportPath, "utf8");
 
-    // Define expected markdown structure as a template
-    const expectedMarkdownLines = [
-      "# Test Report",
-      "",
-      /\*\*Generated:\*\* \d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}:\d{2}/,
-      "",
-      "## Summary",
-      "",
-      "| Metric | Value |",
-      "|--------|-------|",
-      "| **Total Tests** | 1 |",
-      "| **Passed** | 1 |",
-      "| **Failed** | 0 |",
-      "| **Skipped** | 0 |",
-      /\| \*\*Duration\*\* \| \d+ms \|/,
-      "| **Status** | PASSED |",
-      "",
-      "## login.spec.ts",
-      "",
-      "### ✅ should login successfully",
-      "",
-      "**Status:** PASSED | **Duration:** 1.50s",
-      "",
-      "- 🔹 Navigate to login page (500ms)",
-      "- 🔹 Fill username and password (300ms)",
-      "  - 🔹 Type username (150ms)",
-      "  - 🔹 Type password (150ms)",
-      "- 🔹 Click login button (700ms)",
-      "",
-      "**Screenshots:**",
-      "- 📸 screenshot: ![screenshot](screenshots/test-uuid-1.png)",
-      "",
-      "",
-    ];
+    // Load expected markdown template from external file
+    const expectedTemplate = fs.readFileSync(
+      path.join(__dirname, "testdata", "expected.md"),
+      "utf8",
+    );
+
+    // Convert template to array with placeholder handling
+    const expectedMarkdownLines = expectedTemplate.split("\n").map((line) => {
+      if (line.includes("{{GENERATED_TIMESTAMP}}")) {
+        return /\*\*Generated:\*\* \d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}:\d{2}/;
+      }
+      if (line.includes("{{DYNAMIC_DURATION}}")) {
+        return /\| \*\*Duration\*\* \| \d+ms \|/;
+      }
+      return line;
+    });
 
     // Perform line-by-line comparison for better debugging
     const actualLines = markdownContent.split("\n");
