@@ -73,7 +73,9 @@ export class MarkdownReporter implements Reporter {
 
   private generateMarkdownReport(): void {
     const markdown = this.buildMarkdownContent();
-    const outputPath = path.resolve(this.options.outputFile!);
+    const outputPath = path.resolve(
+      this.options.outputFile ?? "playwright-report.md",
+    );
 
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
     fs.writeFileSync(outputPath, markdown, "utf-8");
@@ -101,7 +103,9 @@ export class MarkdownReporter implements Reporter {
 
     // Success rate
     const successRate =
-      this.stats.total > 0 ? ((this.stats.passed / this.stats.total) * 100).toFixed(1) : "0";
+      this.stats.total > 0
+        ? ((this.stats.passed / this.stats.total) * 100).toFixed(1)
+        : "0";
     lines.push(`**Success Rate**: ${successRate}%`);
     lines.push("");
 
@@ -145,8 +149,14 @@ export class MarkdownReporter implements Reporter {
     return lines.join("\n");
   }
 
-  private groupTestsByFile(): Record<string, Array<{ test: TestCase; result: TestResult }>> {
-    const grouped: Record<string, Array<{ test: TestCase; result: TestResult }>> = {};
+  private groupTestsByFile(): Record<
+    string,
+    Array<{ test: TestCase; result: TestResult }>
+  > {
+    const grouped: Record<
+      string,
+      Array<{ test: TestCase; result: TestResult }>
+    > = {};
 
     for (const item of this.testResults) {
       const filePath = item.test.location.file;

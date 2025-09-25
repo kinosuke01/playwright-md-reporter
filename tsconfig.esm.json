@@ -6,10 +6,5 @@
     "declaration": false,
     "declarationMap": false
   },
-  "exclude": [
-    "node_modules",
-    "lib",
-    "examples",
-    "tests"
-  ]
+  "exclude": ["node_modules", "lib", "examples", "tests"]
 }
