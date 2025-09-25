@@ -2,9 +2,9 @@ import MarkdownReporter from "./reporter";
 
 export {
   MarkdownReporterOptions,
+  StepDetail,
   TestCaseResult,
   TestSuiteResult,
-  StepDetail,
 } from "./types";
 
 export { MarkdownReporter };

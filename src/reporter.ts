@@ -6,14 +6,13 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
-import * as path from "path";
-import * as fs from "fs";
 import * as crypto from "crypto";
-import {
+import * as fs from "fs";
+import * as path from "path";
+import type {
   MarkdownReporterOptions,
-  TestCaseResult,
-  TestSuiteResult,
   StepDetail,
+  TestCaseResult,
 } from "./types";
 
 class MarkdownReporter implements Reporter {
@@ -50,7 +49,7 @@ class MarkdownReporter implements Reporter {
     console.log(
       `📝 Markdown Reporter: Starting test run with ${
         suite.allTests().length
-      } tests`
+      } tests`,
     );
   }
 
@@ -129,7 +128,7 @@ class MarkdownReporter implements Reporter {
   }
 
   private collectScreenshots(
-    result: TestResult
+    result: TestResult,
   ): { name: string; path: string }[] {
     const screenshots: { name: string; path: string }[] = [];
 
@@ -188,13 +187,13 @@ class MarkdownReporter implements Reporter {
   private generateMarkdown(result: FullResult, duration: number): string {
     const totalTests = this.allTests.length;
     const passedTests = this.allTests.filter(
-      (t) => t.status === "passed"
+      (t) => t.status === "passed",
     ).length;
     const failedTests = this.allTests.filter(
-      (t) => t.status === "failed"
+      (t) => t.status === "failed",
     ).length;
     const skippedTests = this.allTests.filter(
-      (t) => t.status === "skipped"
+      (t) => t.status === "skipped",
     ).length;
 
     let markdown = `# Test Report\n\n`;
@@ -237,7 +236,7 @@ class MarkdownReporter implements Reporter {
 
         // テストメタ情報
         markdown += `**Status:** ${test.status.toUpperCase()} | **Duration:** ${this.formatDuration(
-          test.duration
+          test.duration,
         )}\n\n`;
 
         // エラー情報（テストレベル）
