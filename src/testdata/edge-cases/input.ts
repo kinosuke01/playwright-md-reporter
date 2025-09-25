@@ -36,7 +36,11 @@ export const mockConfig: FullConfig = {
 export const mockUnknownStatusTestCase: TestCase = {
   id: "test-unknown",
   title: "should handle unknown status",
-  location: null as any, // This will trigger "Unknown File" path
+  location: {
+    file: "/test/project/tests/edge.spec.ts",
+    line: 5,
+    column: 3,
+  },
   parent: {} as Suite,
   repeatEachIndex: 0,
   retries: 0,
