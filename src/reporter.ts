@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import type {
   FullConfig,
   FullResult,
@@ -8,180 +6,321 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
-import type { MarkdownReporterOptions, TestStats } from "./types";
+import * as path from "path";
+import * as fs from "fs";
+import * as crypto from "crypto";
+import {
+  MarkdownReporterOptions,
+  TestCaseResult,
+  TestSuiteResult,
+  StepDetail,
+} from "./types";
 
-export class MarkdownReporter implements Reporter {
+class MarkdownReporter implements Reporter {
   private options: MarkdownReporterOptions;
-  private stats: TestStats = {
-    total: 0,
-    passed: 0,
-    failed: 0,
-    skipped: 0,
-    flaky: 0,
-    duration: 0,
-  };
-  private startTime = 0;
-  private testResults: Array<{ test: TestCase; result: TestResult }> = [];
+  private outputDir: string;
+  private dataDir: string;
+  private startTime: Date = new Date();
+  private allTests: TestCaseResult[] = [];
 
   constructor(options: MarkdownReporterOptions = {}) {
     this.options = {
-      outputFile: "playwright-report.md",
-      includeStackTrace: true,
-      includeAttachments: false,
-      customTitle: "Playwright Test Report",
+      outputDir: options.outputDir || "playwright-md-report",
+      filename: options.filename || "index.md",
       ...options,
     };
+
+    this.outputDir = this.options.outputDir!;
+    this.dataDir = path.join(this.outputDir, "screenshots");
   }
 
-  onBegin(_config: FullConfig, suite: Suite): void {
-    this.startTime = Date.now();
-    this.stats.total = suite.allTests().length;
-  }
+  onBegin(config: FullConfig, suite: Suite) {
+    this.startTime = new Date();
 
-  onTestEnd(test: TestCase, result: TestResult): void {
-    this.testResults.push({ test, result });
-
-    switch (result.status) {
-      case "passed":
-        this.stats.passed++;
-        break;
-      case "failed":
-        this.stats.failed++;
-        break;
-      case "skipped":
-        this.stats.skipped++;
-        break;
-      case "timedOut":
-        this.stats.failed++;
-        break;
-      case "interrupted":
-        this.stats.failed++;
-        break;
-      default:
-        break;
+    // 出力ディレクトリのクリーニングと作成
+    if (fs.existsSync(this.outputDir)) {
+      // 既存のディレクトリとその中身を全削除
+      fs.rmSync(this.outputDir, { recursive: true, force: true });
     }
 
-    if (result.status === "passed" && result.retry > 0) {
-      this.stats.flaky++;
-    }
-  }
+    // ディレクトリを作成
+    fs.mkdirSync(this.outputDir, { recursive: true });
+    fs.mkdirSync(this.dataDir, { recursive: true });
 
-  onEnd(_result: FullResult): void {
-    this.stats.duration = Date.now() - this.startTime;
-    this.generateMarkdownReport();
-  }
-
-  private generateMarkdownReport(): void {
-    const markdown = this.buildMarkdownContent();
-    const outputPath = path.resolve(
-      this.options.outputFile ?? "playwright-report.md",
+    console.log(
+      `📝 Markdown Reporter: Starting test run with ${
+        suite.allTests().length
+      } tests`
     );
-
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    fs.writeFileSync(outputPath, markdown, "utf-8");
-
-    console.log(`📊 Markdown report generated: ${outputPath}`);
   }
 
-  private buildMarkdownContent(): string {
-    const lines: string[] = [];
+  onTestBegin(test: TestCase, result: TestResult) {
+    // スイート管理は不要になったため、何もしない
+  }
 
-    // Title
-    lines.push(`# ${this.options.customTitle}`);
-    lines.push("");
+  onTestEnd(test: TestCase, result: TestResult) {
+    const screenshots = this.collectScreenshots(result);
+    const stepDetails = this.collectStepDetails(result);
 
-    // Summary
-    lines.push("## Summary");
-    lines.push("");
-    lines.push(`- **Total Tests**: ${this.stats.total}`);
-    lines.push(`- **Passed**: ${this.stats.passed} ✅`);
-    lines.push(`- **Failed**: ${this.stats.failed} ❌`);
-    lines.push(`- **Skipped**: ${this.stats.skipped} ⏭️`);
-    lines.push(`- **Flaky**: ${this.stats.flaky} 🔄`);
-    lines.push(`- **Duration**: ${this.formatDuration(this.stats.duration)}`);
-    lines.push("");
+    const testResult: TestCaseResult = {
+      title: test.title,
+      filePath: test.location?.file,
+      status: result.status,
+      duration: result.duration,
+      error: result.error
+        ? {
+            message: result.error.message,
+            stack: result.error.stack,
+            location: result.error.location
+              ? {
+                  file: result.error.location.file,
+                  line: result.error.location.line,
+                  column: result.error.location.column,
+                }
+              : undefined,
+          }
+        : undefined,
+      screenshots,
+      stepDetails,
+    };
 
-    // Success rate
-    const successRate =
-      this.stats.total > 0
-        ? ((this.stats.passed / this.stats.total) * 100).toFixed(1)
-        : "0";
-    lines.push(`**Success Rate**: ${successRate}%`);
-    lines.push("");
+    this.allTests.push(testResult);
+  }
 
-    // Test Results
-    if (this.testResults.length > 0) {
-      lines.push("## Test Results");
-      lines.push("");
+  private collectStepDetails(result: TestResult): StepDetail[] {
+    const stepDetails: StepDetail[] = [];
 
-      const groupedResults = this.groupTestsByFile();
+    const processSteps = (steps: any[], level = 0) => {
+      for (const step of steps) {
+        const stepDetail: StepDetail = {
+          title: step.title,
+          category: step.category || "unknown",
+          duration: step.duration || 0,
+          error: step.error?.message,
+          level: level,
+        };
 
-      for (const [file, tests] of Object.entries(groupedResults)) {
-        lines.push(`### ${file}`);
-        lines.push("");
+        stepDetails.push(stepDetail);
 
-        for (const { test, result } of tests) {
-          const status = this.getStatusEmoji(result.status);
-          const title = test.title;
-          const duration = this.formatDuration(result.duration);
+        // 再帰的に子ステップを処理
+        if (step.steps && step.steps.length > 0) {
+          processSteps(step.steps, level + 1);
+        }
+      }
+    };
 
-          lines.push(`- ${status} **${title}** (${duration})`);
+    if (result.steps) {
+      processSteps(result.steps);
+    }
 
-          if (result.status === "failed" && this.options.includeStackTrace) {
-            if (result.error?.message) {
-              lines.push(`  - Error: \`${result.error.message}\``);
-            }
-            if (result.error?.stack) {
-              lines.push("  ```");
-              lines.push(`  ${result.error.stack}`);
-              lines.push("  ```");
-            }
+    return stepDetails;
+  }
+
+  onEnd(result: FullResult) {
+    const endTime = new Date();
+    const duration = endTime.getTime() - this.startTime.getTime();
+
+    const markdown = this.generateMarkdown(result, duration);
+    const outputPath = path.join(this.outputDir, this.options.filename!);
+
+    fs.writeFileSync(outputPath, markdown, "utf8");
+
+    console.log(`📝 Markdown report generated: ${outputPath}`);
+  }
+
+  private collectScreenshots(
+    result: TestResult
+  ): { name: string; path: string }[] {
+    const screenshots: { name: string; path: string }[] = [];
+
+    // screenshotsディレクトリの存在確認と作成
+    if (!fs.existsSync(this.dataDir)) {
+      fs.mkdirSync(this.dataDir, { recursive: true });
+    }
+
+    for (const attachment of result.attachments) {
+      // スクリーンショット関連のattachmentを対象とする
+      if (
+        attachment.contentType === "image/png" ||
+        attachment.contentType === "image/jpeg"
+      ) {
+        if (attachment.body) {
+          // バイナリデータから直接ファイルを作成
+          const uuid = crypto.randomUUID();
+          const ext = attachment.contentType === "image/jpeg" ? ".jpg" : ".png";
+          const filename = `${uuid}${ext}`;
+          const destPath = path.join(this.dataDir, filename);
+
+          try {
+            fs.writeFileSync(destPath, attachment.body);
+            const savedScreenshotPath = `screenshots/${filename}`;
+            screenshots.push({
+              name: attachment.name || "Screenshot",
+              path: savedScreenshotPath,
+            });
+          } catch (error) {
+            console.warn(`Failed to save screenshot: ${error}`);
+          }
+        } else if (attachment.path) {
+          // ファイルパスから読み込んでコピー
+          const originalExt = path.extname(attachment.path);
+          const uuid = crypto.randomUUID();
+          const filename = `${uuid}${originalExt}`;
+          const destPath = path.join(this.dataDir, filename);
+
+          try {
+            fs.copyFileSync(attachment.path, destPath);
+            const savedScreenshotPath = `screenshots/${filename}`;
+            screenshots.push({
+              name: attachment.name || "Screenshot",
+              path: savedScreenshotPath,
+            });
+          } catch (error) {
+            console.warn(`Failed to copy screenshot: ${error}`);
           }
         }
-        lines.push("");
       }
     }
 
-    // Footer
-    lines.push("---");
-    lines.push(`*Report generated on ${new Date().toISOString()}*`);
-
-    return lines.join("\n");
+    return screenshots;
   }
 
-  private groupTestsByFile(): Record<
-    string,
-    Array<{ test: TestCase; result: TestResult }>
-  > {
-    const grouped: Record<
-      string,
-      Array<{ test: TestCase; result: TestResult }>
-    > = {};
+  private generateMarkdown(result: FullResult, duration: number): string {
+    const totalTests = this.allTests.length;
+    const passedTests = this.allTests.filter(
+      (t) => t.status === "passed"
+    ).length;
+    const failedTests = this.allTests.filter(
+      (t) => t.status === "failed"
+    ).length;
+    const skippedTests = this.allTests.filter(
+      (t) => t.status === "skipped"
+    ).length;
 
-    for (const item of this.testResults) {
-      const filePath = item.test.location.file;
-      const fileName = path.basename(filePath);
+    let markdown = `# Test Report\n\n`;
+    markdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
 
-      if (!grouped[fileName]) {
-        grouped[fileName] = [];
+    // サマリー
+    markdown += `## Summary\n\n`;
+    markdown += `| Metric | Value |\n`;
+    markdown += `|--------|-------|\n`;
+    markdown += `| **Total Tests** | ${totalTests} |\n`;
+    markdown += `| **Passed** | ${passedTests} |\n`;
+    markdown += `| **Failed** | ${failedTests} |\n`;
+    markdown += `| **Skipped** | ${skippedTests} |\n`;
+    markdown += `| **Duration** | ${this.formatDuration(duration)} |\n`;
+    markdown += `| **Status** | ${result.status.toUpperCase()} |\n\n`;
+
+    // ファイルごとにテストをグループ化
+    const testsByFile = new Map<string, TestCaseResult[]>();
+
+    for (const test of this.allTests) {
+      const fileName = test.filePath
+        ? path.basename(test.filePath)
+        : "Unknown File";
+      if (!testsByFile.has(fileName)) {
+        testsByFile.set(fileName, []);
       }
-
-      grouped[fileName].push(item);
+      testsByFile.get(fileName)!.push(test);
     }
 
-    return grouped;
+    // ファイル名でソートして出力
+    const sortedFileNames = Array.from(testsByFile.keys()).sort();
+
+    for (const fileName of sortedFileNames) {
+      const tests = testsByFile.get(fileName)!;
+      markdown += `## ${fileName}\n\n`;
+
+      for (const test of tests) {
+        const statusIcon = this.getStatusIcon(test.status);
+        markdown += `### ${statusIcon} ${test.title}\n\n`;
+
+        // テストメタ情報
+        markdown += `**Status:** ${test.status.toUpperCase()} | **Duration:** ${this.formatDuration(
+          test.duration
+        )}\n\n`;
+
+        // エラー情報（テストレベル）
+        if (test.error) {
+          markdown += `**Error:**\n\`\`\`\n`;
+
+          if (test.error.message) {
+            markdown += `${test.error.message}\n`;
+          }
+
+          if (test.error.location) {
+            markdown += `\nLocation: ${test.error.location.file}:${test.error.location.line}:${test.error.location.column}\n`;
+          }
+
+          if (test.error.stack) {
+            markdown += `\nStack Trace:\n${test.error.stack}\n`;
+          }
+
+          markdown += `\`\`\`\n\n`;
+        }
+
+        // ステップ詳細を階層化リスト形式で表示
+        if (test.stepDetails.length > 0) {
+          for (const step of test.stepDetails) {
+            const stepIcon = this.getStepIcon(step.category);
+            const indent = "  ".repeat(step.level); // 階層レベルに応じたインデント
+            markdown += `${indent}- ${stepIcon} ${step.title}`;
+
+            if (step.duration > 0) {
+              markdown += ` (${this.formatDuration(step.duration)})`;
+            }
+
+            markdown += `\n`;
+
+            // ステップレベルのエラー
+            if (step.error) {
+              markdown += `${indent}  - ❌ Step failed\n`;
+            }
+          }
+          markdown += `\n`;
+        }
+
+        // テストレベルのスクリーンショット（全てのスクリーンショットを表示）
+        if (test.screenshots.length > 0) {
+          markdown += `**Screenshots:**\n`;
+          for (const screenshot of test.screenshots) {
+            markdown += `- 📸 ${screenshot.name}: ![${screenshot.name}](${screenshot.path})\n`;
+          }
+          markdown += `\n`;
+        }
+      }
+    }
+
+    return markdown;
   }
 
-  private getStatusEmoji(status: string): string {
+  private getStepIcon(category: string): string {
+    switch (category) {
+      case "test.step":
+        return "🔹";
+      case "fixture":
+        return "⚙️";
+      case "hook":
+        return "🪝";
+      case "test":
+        return "🧪";
+      default:
+        return "📝";
+    }
+  }
+
+  private getStatusIcon(status: string): string {
     switch (status) {
       case "passed":
         return "✅";
       case "failed":
-      case "timedOut":
-      case "interrupted":
         return "❌";
       case "skipped":
         return "⏭️";
+      case "timedOut":
+        return "⏰";
+      case "interrupted":
+        return "⏸️";
       default:
         return "❓";
     }
@@ -191,15 +330,8 @@ export class MarkdownReporter implements Reporter {
     if (ms < 1000) {
       return `${ms}ms`;
     }
-
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-
-    if (minutes > 0) {
-      const remainingSeconds = seconds % 60;
-      return `${minutes}m ${remainingSeconds}s`;
-    }
-
-    return `${seconds}s`;
+    return `${(ms / 1000).toFixed(2)}s`;
   }
 }
+
+export default MarkdownReporter;
