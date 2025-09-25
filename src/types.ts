@@ -2,6 +2,7 @@ export interface MarkdownReporterOptions {
   outputDir?: string;
   filename?: string;
   generateUUID?: () => string;
+  getCurrentDate?: () => Date;
 }
 
 export interface StepDetail {

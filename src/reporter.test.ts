@@ -23,11 +23,13 @@ describe("MarkdownReporter", () => {
     // Reset UUID counter for each test
     uuidCounter = 0;
     const mockGenerateUUID = () => `test-uuid-${++uuidCounter}`;
+    const mockGetCurrentDate = () => new Date("2025-01-01T12:00:00Z");
 
     reporter = new MarkdownReporter({
       outputDir: tempDir,
       filename: "test-report.md",
       generateUUID: mockGenerateUUID,
+      getCurrentDate: mockGetCurrentDate,
     });
   });
 
@@ -183,7 +185,7 @@ describe("MarkdownReporter", () => {
     // Mock data for FullResult
     const mockFullResult: FullResult = {
       status: "passed",
-      startTime: new Date(),
+      startTime: new Date("2025-01-01T12:00:00Z"),
       duration: 2000,
     };
 
@@ -206,16 +208,8 @@ describe("MarkdownReporter", () => {
       "utf8",
     );
 
-    // Convert template to array with placeholder handling
-    const expectedMarkdownLines = expectedTemplate.split("\n").map((line) => {
-      if (line.includes("{{GENERATED_TIMESTAMP}}")) {
-        return /\*\*Generated:\*\* \d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}:\d{2}/;
-      }
-      if (line.includes("{{DYNAMIC_DURATION}}")) {
-        return /\| \*\*Duration\*\* \| \d+ms \|/;
-      }
-      return line;
-    });
+    // Convert template to array - no need for dynamic handling with DI
+    const expectedMarkdownLines = expectedTemplate.split("\n");
 
     // Perform line-by-line comparison for better debugging
     const actualLines = markdownContent.split("\n");
@@ -233,23 +227,14 @@ describe("MarkdownReporter", () => {
     // Compare each line individually for precise error reporting
     for (let i = 0; i < expectedMarkdownLines.length; i++) {
       const actualLine = actualLines[i] || "";
-      const expectedPattern = expectedMarkdownLines[i];
+      const expectedLine = expectedMarkdownLines[i];
 
-      if (expectedPattern instanceof RegExp) {
-        if (!expectedPattern.test(actualLine)) {
-          console.log(`Line ${i + 1} mismatch:`);
-          console.log(`  Actual:   "${actualLine}"`);
-          console.log(`  Expected: ${expectedPattern}`);
-        }
-        expect(actualLine).toMatch(expectedPattern);
-      } else {
-        if (actualLine !== expectedPattern) {
-          console.log(`Line ${i + 1} mismatch:`);
-          console.log(`  Actual:   "${actualLine}"`);
-          console.log(`  Expected: "${expectedPattern}"`);
-        }
-        expect(actualLine).toBe(expectedPattern);
+      if (actualLine !== expectedLine) {
+        console.log(`Line ${i + 1} mismatch:`);
+        console.log(`  Actual:   "${actualLine}"`);
+        console.log(`  Expected: "${expectedLine}"`);
       }
+      expect(actualLine).toBe(expectedLine);
     }
 
     // Verify that screenshot directory was created

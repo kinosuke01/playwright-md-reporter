@@ -23,6 +23,7 @@ class MarkdownReporter implements Reporter {
   private startTime: Date = new Date();
   private allTests: TestCaseResult[] = [];
   private generateUUID: () => string;
+  private getCurrentDate: () => Date;
 
   constructor(options: MarkdownReporterOptions = {}) {
     this.options = {
@@ -36,6 +37,7 @@ class MarkdownReporter implements Reporter {
     this.dataDir = path.join(this.outputDir, "screenshots");
     this.generateUUID =
       this.options.generateUUID || (() => crypto.randomUUID());
+    this.getCurrentDate = this.options.getCurrentDate || (() => new Date());
   }
 
   onBegin(_config: FullConfig, suite: Suite) {
@@ -205,7 +207,7 @@ class MarkdownReporter implements Reporter {
     ).length;
 
     let markdown = `# Test Report\n\n`;
-    markdown += `**Generated:** ${new Date().toLocaleString()}\n\n`;
+    markdown += `**Generated:** ${this.getCurrentDate().toLocaleString()}\n\n`;
 
     // サマリー
     markdown += `## Summary\n\n`;

@@ -1,6 +1,6 @@
 # Test Report
 
-{{GENERATED_TIMESTAMP}}
+**Generated:** 2025/1/1 21:00:00
 
 ## Summary
 
@@ -10,7 +10,7 @@
 | **Passed** | 1 |
 | **Failed** | 0 |
 | **Skipped** | 0 |
-| **Duration** | {{DYNAMIC_DURATION}} |
+| **Duration** | 2ms |
 | **Status** | PASSED |
 
 ## login.spec.ts
