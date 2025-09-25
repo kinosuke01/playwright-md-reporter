@@ -1,3 +1,6 @@
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import type {
   FullConfig,
   FullResult,
@@ -6,9 +9,6 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as path from "path";
 import type {
   MarkdownReporterOptions,
   StepDetail,
@@ -29,11 +29,11 @@ class MarkdownReporter implements Reporter {
       ...options,
     };
 
-    this.outputDir = this.options.outputDir!;
+    this.outputDir = this.options.outputDir ?? "playwright-md-report";
     this.dataDir = path.join(this.outputDir, "screenshots");
   }
 
-  onBegin(config: FullConfig, suite: Suite) {
+  onBegin(_config: FullConfig, suite: Suite) {
     this.startTime = new Date();
 
     // 出力ディレクトリのクリーニングと作成
@@ -53,7 +53,7 @@ class MarkdownReporter implements Reporter {
     );
   }
 
-  onTestBegin(test: TestCase, result: TestResult) {
+  onTestBegin(_test: TestCase, _result: TestResult) {
     // スイート管理は不要になったため、何もしない
   }
 
@@ -89,7 +89,16 @@ class MarkdownReporter implements Reporter {
   private collectStepDetails(result: TestResult): StepDetail[] {
     const stepDetails: StepDetail[] = [];
 
-    const processSteps = (steps: any[], level = 0) => {
+    const processSteps = (
+      steps: {
+        title: string;
+        category?: string;
+        duration?: number;
+        error?: { message: string };
+        steps?: unknown[];
+      }[],
+      level = 0,
+    ) => {
       for (const step of steps) {
         const stepDetail: StepDetail = {
           title: step.title,
@@ -120,7 +129,10 @@ class MarkdownReporter implements Reporter {
     const duration = endTime.getTime() - this.startTime.getTime();
 
     const markdown = this.generateMarkdown(result, duration);
-    const outputPath = path.join(this.outputDir, this.options.filename!);
+    const outputPath = path.join(
+      this.outputDir,
+      this.options.filename ?? "index.md",
+    );
 
     fs.writeFileSync(outputPath, markdown, "utf8");
 
@@ -220,14 +232,18 @@ class MarkdownReporter implements Reporter {
       if (!testsByFile.has(fileName)) {
         testsByFile.set(fileName, []);
       }
-      testsByFile.get(fileName)!.push(test);
+      const tests = testsByFile.get(fileName);
+      if (tests) {
+        tests.push(test);
+      }
     }
 
     // ファイル名でソートして出力
     const sortedFileNames = Array.from(testsByFile.keys()).sort();
 
     for (const fileName of sortedFileNames) {
-      const tests = testsByFile.get(fileName)!;
+      const tests = testsByFile.get(fileName);
+      if (!tests) continue;
       markdown += `## ${fileName}\n\n`;
 
       for (const test of tests) {
