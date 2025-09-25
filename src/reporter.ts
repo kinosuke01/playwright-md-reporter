@@ -8,6 +8,7 @@ import type {
   Suite,
   TestCase,
   TestResult,
+  TestStep,
 } from "@playwright/test/reporter";
 import type {
   MarkdownReporterOptions,
@@ -89,22 +90,13 @@ class MarkdownReporter implements Reporter {
   private collectStepDetails(result: TestResult): StepDetail[] {
     const stepDetails: StepDetail[] = [];
 
-    const processSteps = (
-      steps: {
-        title: string;
-        category?: string;
-        duration?: number;
-        error?: { message: string };
-        steps?: unknown[];
-      }[],
-      level = 0,
-    ) => {
+    const processSteps = (steps: TestStep[], level = 0) => {
       for (const step of steps) {
         const stepDetail: StepDetail = {
           title: step.title,
           category: step.category || "unknown",
           duration: step.duration || 0,
-          error: step.error?.message,
+          error: step.error?.message || undefined,
           level: level,
         };
 
