@@ -14,13 +14,20 @@ import MarkdownReporter from "./reporter";
 describe("MarkdownReporter", () => {
   let tempDir: string;
   let reporter: MarkdownReporter;
+  let uuidCounter: number;
 
   beforeEach(() => {
     // Create temporary directory for test output
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "playwright-md-test-"));
+
+    // Reset UUID counter for each test
+    uuidCounter = 0;
+    const mockGenerateUUID = () => `test-uuid-${++uuidCounter}`;
+
     reporter = new MarkdownReporter({
       outputDir: tempDir,
       filename: "test-report.md",
+      generateUUID: mockGenerateUUID,
     });
   });
 
@@ -190,9 +197,9 @@ describe("MarkdownReporter", () => {
     const screenshotDir = path.join(tempDir, "screenshots");
     expect(fs.existsSync(screenshotDir)).toBe(true);
 
-    // Verify that screenshot files were created
+    // Verify that screenshot files were created with predictable names
     const screenshotFiles = fs.readdirSync(screenshotDir);
     expect(screenshotFiles.length).toBe(1);
-    expect(screenshotFiles[0]).toMatch(/.*\.png$/);
+    expect(screenshotFiles[0]).toBe("test-uuid-1.png");
   });
 });

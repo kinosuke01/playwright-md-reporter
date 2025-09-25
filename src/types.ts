@@ -1,6 +1,7 @@
 export interface MarkdownReporterOptions {
   outputDir?: string;
   filename?: string;
+  generateUUID?: () => string;
 }
 
 export interface StepDetail {

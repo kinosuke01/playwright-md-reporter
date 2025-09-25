@@ -22,16 +22,19 @@ class MarkdownReporter implements Reporter {
   private dataDir: string;
   private startTime: Date = new Date();
   private allTests: TestCaseResult[] = [];
+  private generateUUID: () => string;
 
   constructor(options: MarkdownReporterOptions = {}) {
     this.options = {
       outputDir: options.outputDir || "playwright-md-report",
       filename: options.filename || "index.md",
+      generateUUID: options.generateUUID || (() => crypto.randomUUID()),
       ...options,
     };
 
     this.outputDir = this.options.outputDir ?? "playwright-md-report";
     this.dataDir = path.join(this.outputDir, "screenshots");
+    this.generateUUID = this.options.generateUUID || (() => crypto.randomUUID());
   }
 
   onBegin(_config: FullConfig, suite: Suite) {
@@ -149,7 +152,7 @@ class MarkdownReporter implements Reporter {
       ) {
         if (attachment.body) {
           // バイナリデータから直接ファイルを作成
-          const uuid = crypto.randomUUID();
+          const uuid = this.generateUUID();
           const ext = attachment.contentType === "image/jpeg" ? ".jpg" : ".png";
           const filename = `${uuid}${ext}`;
           const destPath = path.join(this.dataDir, filename);
@@ -167,7 +170,7 @@ class MarkdownReporter implements Reporter {
         } else if (attachment.path) {
           // ファイルパスから読み込んでコピー
           const originalExt = path.extname(attachment.path);
-          const uuid = crypto.randomUUID();
+          const uuid = this.generateUUID();
           const filename = `${uuid}${originalExt}`;
           const destPath = path.join(this.dataDir, filename);
 
