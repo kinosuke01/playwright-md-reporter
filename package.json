@@ -1,0 +1,56 @@
+{
+  "name": "playwright-md-reporter",
+  "version": "1.0.0",
+  "description": "A Playwright test reporter that generates Markdown reports",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js"
+    }
+  },
+  "scripts": {
+    "build": "npm run clean && npm run build:cjs && npm run build:esm && npm run build:rename",
+    "build:cjs": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:rename": "mv lib/index.js lib/index.mjs",
+    "clean": "rm -rf lib/",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "playwright",
+    "reporter",
+    "markdown",
+    "test",
+    "testing"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kinosuke01/playwright-md-reporter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kinosuke01/playwright-md-reporter/issues"
+  },
+  "homepage": "https://github.com/kinosuke01/playwright-md-reporter#readme",
+  "peerDependencies": {
+    "@playwright/test": ">=1.20.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.3",
+    "@playwright/test": "^1.47.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0"
+  }
+}
