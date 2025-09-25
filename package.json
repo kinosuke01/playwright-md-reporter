@@ -26,7 +26,11 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "playwright test",
+    "test:all": "npm run test && npm run test:integration"
   },
   "keywords": [
     "playwright",
@@ -52,6 +56,8 @@
     "@biomejs/biome": "^2.2.4",
     "@playwright/test": "^1.55.1",
     "@types/node": "^24.5.2",
-    "typescript": "^5.9.2"
+    "@vitest/coverage-v8": "^3.2.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }
