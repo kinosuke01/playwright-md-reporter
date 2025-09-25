@@ -154,13 +154,13 @@ export const mockFilePathTestResult: TestResult = {
     {
       name: "file-screenshot",
       contentType: "image/png",
-      path: __dirname + "/temp-file.png",
+      path: `${__dirname}/temp-file.png`,
       body: undefined,
     },
     {
       name: "Custom Screenshot Name",
       contentType: "image/png",
-      path: __dirname + "/temp-file.png",
+      path: `${__dirname}/temp-file.png`,
       body: undefined,
     },
   ],
@@ -213,8 +213,16 @@ export const mockSuite: Suite = {
   tests: [mockJpegTestCase, mockFilePathTestCase, mockNoScreenshotTestCase],
   parent: undefined,
   project: () => undefined,
-  allTests: () => [mockJpegTestCase, mockFilePathTestCase, mockNoScreenshotTestCase],
-  entries: () => [mockJpegTestCase, mockFilePathTestCase, mockNoScreenshotTestCase],
+  allTests: () => [
+    mockJpegTestCase,
+    mockFilePathTestCase,
+    mockNoScreenshotTestCase,
+  ],
+  entries: () => [
+    mockJpegTestCase,
+    mockFilePathTestCase,
+    mockNoScreenshotTestCase,
+  ],
   titlePath: () => ["Screenshot Tests"],
   type: "describe",
 };

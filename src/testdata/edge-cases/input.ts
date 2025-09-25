@@ -36,7 +36,7 @@ export const mockConfig: FullConfig = {
 export const mockUnknownStatusTestCase: TestCase = {
   id: "test-unknown",
   title: "should handle unknown status",
-  location: undefined, // This will trigger "Unknown File" path
+  location: null as any, // This will trigger "Unknown File" path
   parent: {} as Suite,
   repeatEachIndex: 0,
   retries: 0,
@@ -78,7 +78,7 @@ export const mockUnknownStatusTestResult: TestResult = {
   parallelIndex: 0,
   workerIndex: 0,
   duration: 100,
-  status: "unknown" as any, // Force unknown status to trigger default case
+  status: "unknown" as TestResult["status"], // Force unknown status to trigger default case
   errors: [],
   error: undefined,
   stdout: [],

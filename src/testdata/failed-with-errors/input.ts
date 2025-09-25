@@ -141,7 +141,8 @@ export const mockFailedTestResult: TestResult = {
       duration: 500,
       error: {
         message: "Element not found: #submit",
-        stack: "Error: Element not found: #submit\n    at clickButton (/test/utils.js:45:12)",
+        stack:
+          "Error: Element not found: #submit\n    at clickButton (/test/utils.js:45:12)",
       },
       steps: [],
       titlePath: () => ["Click submit button"],
@@ -220,8 +221,16 @@ export const mockSuite: Suite = {
   tests: [mockFailedTestCase, mockTimedOutTestCase, mockInterruptedTestCase],
   parent: undefined,
   project: () => undefined,
-  allTests: () => [mockFailedTestCase, mockTimedOutTestCase, mockInterruptedTestCase],
-  entries: () => [mockFailedTestCase, mockTimedOutTestCase, mockInterruptedTestCase],
+  allTests: () => [
+    mockFailedTestCase,
+    mockTimedOutTestCase,
+    mockInterruptedTestCase,
+  ],
+  entries: () => [
+    mockFailedTestCase,
+    mockTimedOutTestCase,
+    mockInterruptedTestCase,
+  ],
   titlePath: () => ["Error Tests"],
   type: "describe",
 };
