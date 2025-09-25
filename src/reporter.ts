@@ -43,13 +43,13 @@ class MarkdownReporter implements Reporter {
   onBegin(_config: FullConfig, suite: Suite) {
     this.startTime = this.getCurrentDate();
 
-    // 出力ディレクトリのクリーニングと作成
+    // Clean and create output directory
     if (fs.existsSync(this.outputDir)) {
-      // 既存のディレクトリとその中身を全削除
+      // Remove existing directory and all its contents
       fs.rmSync(this.outputDir, { recursive: true, force: true });
     }
 
-    // ディレクトリを作成
+    // Create directories
     fs.mkdirSync(this.outputDir, { recursive: true });
     fs.mkdirSync(this.dataDir, { recursive: true });
 
@@ -61,7 +61,7 @@ class MarkdownReporter implements Reporter {
   }
 
   onTestBegin(_test: TestCase, _result: TestResult) {
-    // スイート管理は不要になったため、何もしない
+    // Suite management is no longer needed, so do nothing
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
@@ -108,7 +108,7 @@ class MarkdownReporter implements Reporter {
 
         stepDetails.push(stepDetail);
 
-        // 再帰的に子ステップを処理
+        // Process child steps recursively
         if (step.steps && step.steps.length > 0) {
           processSteps(step.steps, level + 1);
         }
@@ -142,19 +142,19 @@ class MarkdownReporter implements Reporter {
   ): { name: string; path: string }[] {
     const screenshots: { name: string; path: string }[] = [];
 
-    // screenshotsディレクトリの存在確認と作成
+    // Check existence and create screenshots directory
     if (!fs.existsSync(this.dataDir)) {
       fs.mkdirSync(this.dataDir, { recursive: true });
     }
 
     for (const attachment of result.attachments) {
-      // スクリーンショット関連のattachmentを対象とする
+      // Target screenshot-related attachments
       if (
         attachment.contentType === "image/png" ||
         attachment.contentType === "image/jpeg"
       ) {
         if (attachment.body) {
-          // バイナリデータから直接ファイルを作成
+          // Create file directly from binary data
           const uuid = this.generateUUID();
           const ext = attachment.contentType === "image/jpeg" ? ".jpg" : ".png";
           const filename = `${uuid}${ext}`;
@@ -171,7 +171,7 @@ class MarkdownReporter implements Reporter {
             console.warn(`Failed to save screenshot: ${error}`);
           }
         } else if (attachment.path) {
-          // ファイルパスから読み込んでコピー
+          // Read from file path and copy
           const originalExt = path.extname(attachment.path);
           const uuid = this.generateUUID();
           const filename = `${uuid}${originalExt}`;
@@ -209,7 +209,7 @@ class MarkdownReporter implements Reporter {
     let markdown = `# Test Report\n\n`;
     markdown += `**Generated:** ${this.getCurrentDate().toLocaleString()}\n\n`;
 
-    // サマリー
+    // Summary
     markdown += `## Summary\n\n`;
     markdown += `| Metric | Value |\n`;
     markdown += `|--------|-------|\n`;
@@ -220,7 +220,7 @@ class MarkdownReporter implements Reporter {
     markdown += `| **Duration** | ${this.formatDuration(duration)} |\n`;
     markdown += `| **Status** | ${result.status.toUpperCase()} |\n\n`;
 
-    // ファイルごとにテストをグループ化
+    // Group tests by file
     const testsByFile = new Map<string, TestCaseResult[]>();
 
     for (const test of this.allTests) {
@@ -236,7 +236,7 @@ class MarkdownReporter implements Reporter {
       }
     }
 
-    // ファイル名でソートして出力
+    // Sort by file name and output
     const sortedFileNames = Array.from(testsByFile.keys()).sort();
 
     for (const fileName of sortedFileNames) {
@@ -248,12 +248,12 @@ class MarkdownReporter implements Reporter {
         const statusIcon = this.getStatusIcon(test.status);
         markdown += `### ${statusIcon} ${test.title}\n\n`;
 
-        // テストメタ情報
+        // Test metadata
         markdown += `**Status:** ${test.status.toUpperCase()} | **Duration:** ${this.formatDuration(
           test.duration,
         )}\n\n`;
 
-        // エラー情報（テストレベル）
+        // Error information (test level)
         if (test.error) {
           markdown += `**Error:**\n\`\`\`\n`;
 
@@ -272,11 +272,11 @@ class MarkdownReporter implements Reporter {
           markdown += `\`\`\`\n\n`;
         }
 
-        // ステップ詳細を階層化リスト形式で表示
+        // Display step details in hierarchical list format
         if (test.stepDetails.length > 0) {
           for (const step of test.stepDetails) {
             const stepIcon = this.getStepIcon(step.category);
-            const indent = "  ".repeat(step.level); // 階層レベルに応じたインデント
+            const indent = "  ".repeat(step.level); // Indent according to hierarchy level
             markdown += `${indent}- ${stepIcon} ${step.title}`;
 
             if (step.duration > 0) {
@@ -285,7 +285,7 @@ class MarkdownReporter implements Reporter {
 
             markdown += `\n`;
 
-            // ステップレベルのエラー
+            // Step level error
             if (step.error) {
               markdown += `${indent}  - ❌ Step failed\n`;
             }
@@ -293,7 +293,7 @@ class MarkdownReporter implements Reporter {
           markdown += `\n`;
         }
 
-        // テストレベルのスクリーンショット（全てのスクリーンショットを表示）
+        // Test level screenshots (display all screenshots)
         if (test.screenshots.length > 0) {
           markdown += `**Screenshots:**\n`;
           for (const screenshot of test.screenshots) {
