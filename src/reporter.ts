@@ -33,7 +33,7 @@ export class MarkdownReporter implements Reporter {
     };
   }
 
-  onBegin(config: FullConfig, suite: Suite): void {
+  onBegin(_config: FullConfig, suite: Suite): void {
     this.startTime = Date.now();
     this.stats.total = suite.allTests().length;
   }
@@ -66,7 +66,7 @@ export class MarkdownReporter implements Reporter {
     }
   }
 
-  onEnd(result: FullResult): void {
+  onEnd(_result: FullResult): void {
     this.stats.duration = Date.now() - this.startTime;
     this.generateMarkdownReport();
   }

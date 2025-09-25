@@ -6,9 +6,9 @@ export declare class MarkdownReporter implements Reporter {
     private startTime;
     private testResults;
     constructor(options?: MarkdownReporterOptions);
-    onBegin(config: FullConfig, suite: Suite): void;
+    onBegin(_config: FullConfig, suite: Suite): void;
     onTestEnd(test: TestCase, result: TestResult): void;
-    onEnd(result: FullResult): void;
+    onEnd(_result: FullResult): void;
     private generateMarkdownReport;
     private buildMarkdownContent;
     private groupTestsByFile;
