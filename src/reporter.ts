@@ -41,7 +41,7 @@ class MarkdownReporter implements Reporter {
   }
 
   onBegin(_config: FullConfig, suite: Suite) {
-    this.startTime = new Date();
+    this.startTime = this.getCurrentDate();
 
     // 出力ディレクトリのクリーニングと作成
     if (fs.existsSync(this.outputDir)) {
@@ -123,7 +123,7 @@ class MarkdownReporter implements Reporter {
   }
 
   onEnd(result: FullResult) {
-    const endTime = new Date();
+    const endTime = this.getCurrentDate();
     const duration = endTime.getTime() - this.startTime.getTime();
 
     const markdown = this.generateMarkdown(result, duration);

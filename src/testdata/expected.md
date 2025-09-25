@@ -10,7 +10,7 @@
 | **Passed** | 1 |
 | **Failed** | 0 |
 | **Skipped** | 0 |
-| **Duration** | 2ms |
+| **Duration** | 0ms |
 | **Status** | PASSED |
 
 ## login.spec.ts
