@@ -200,24 +200,75 @@ describe("MarkdownReporter", () => {
     // Read and verify the markdown content
     const markdownContent = fs.readFileSync(reportPath, "utf8");
 
-    // Verify essential content elements
-    expect(markdownContent).toContain("# Test Report");
-    expect(markdownContent).toContain("## Summary");
-    expect(markdownContent).toContain("**Total Tests** | 1");
-    expect(markdownContent).toContain("**Passed** | 1");
-    expect(markdownContent).toContain("**Failed** | 0");
-    expect(markdownContent).toContain("**Status** | PASSED");
-    expect(markdownContent).toContain("## login.spec.ts");
-    expect(markdownContent).toContain("### ✅ should login successfully");
-    expect(markdownContent).toContain("**Status:** PASSED");
-    expect(markdownContent).toContain("**Duration:** 1.50s");
-    expect(markdownContent).toContain("🔹 Navigate to login page");
-    expect(markdownContent).toContain("🔹 Fill username and password");
-    expect(markdownContent).toContain("🔹 Type username");
-    expect(markdownContent).toContain("🔹 Type password");
-    expect(markdownContent).toContain("🔹 Click login button");
-    expect(markdownContent).toContain("**Screenshots:**");
-    expect(markdownContent).toContain("📸 screenshot:");
+    // Define expected markdown structure as a template
+    const expectedMarkdownLines = [
+      "# Test Report",
+      "",
+      /\*\*Generated:\*\* \d{4}\/\d{1,2}\/\d{1,2} \d{1,2}:\d{2}:\d{2}/,
+      "",
+      "## Summary",
+      "",
+      "| Metric | Value |",
+      "|--------|-------|",
+      "| **Total Tests** | 1 |",
+      "| **Passed** | 1 |",
+      "| **Failed** | 0 |",
+      "| **Skipped** | 0 |",
+      /\| \*\*Duration\*\* \| \d+ms \|/,
+      "| **Status** | PASSED |",
+      "",
+      "## login.spec.ts",
+      "",
+      "### ✅ should login successfully",
+      "",
+      "**Status:** PASSED | **Duration:** 1.50s",
+      "",
+      "- 🔹 Navigate to login page (500ms)",
+      "- 🔹 Fill username and password (300ms)",
+      "  - 🔹 Type username (150ms)",
+      "  - 🔹 Type password (150ms)",
+      "- 🔹 Click login button (700ms)",
+      "",
+      "**Screenshots:**",
+      "- 📸 screenshot: ![screenshot](screenshots/test-uuid-1.png)",
+      "",
+      "",
+    ];
+
+    // Perform line-by-line comparison for better debugging
+    const actualLines = markdownContent.split("\n");
+
+    // Compare length first
+    if (actualLines.length !== expectedMarkdownLines.length) {
+      console.log("Actual content:");
+      console.log(markdownContent);
+      console.log(
+        `\nExpected ${expectedMarkdownLines.length} lines, but got ${actualLines.length} lines`,
+      );
+    }
+    expect(actualLines.length).toBe(expectedMarkdownLines.length);
+
+    // Compare each line individually for precise error reporting
+    for (let i = 0; i < expectedMarkdownLines.length; i++) {
+      const actualLine = actualLines[i] || "";
+      const expectedPattern = expectedMarkdownLines[i];
+
+      if (expectedPattern instanceof RegExp) {
+        if (!expectedPattern.test(actualLine)) {
+          console.log(`Line ${i + 1} mismatch:`);
+          console.log(`  Actual:   "${actualLine}"`);
+          console.log(`  Expected: ${expectedPattern}`);
+        }
+        expect(actualLine).toMatch(expectedPattern);
+      } else {
+        if (actualLine !== expectedPattern) {
+          console.log(`Line ${i + 1} mismatch:`);
+          console.log(`  Actual:   "${actualLine}"`);
+          console.log(`  Expected: "${expectedPattern}"`);
+        }
+        expect(actualLine).toBe(expectedPattern);
+      }
+    }
 
     // Verify that screenshot directory was created
     const screenshotDir = path.join(tempDir, "screenshots");
