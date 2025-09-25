@@ -30,9 +30,8 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   reporter: [
     ['playwright-md-reporter', {
-      outputFile: 'test-results/report.md',
-      includeStackTrace: true,
-      customTitle: 'My Project Test Results'
+      outputDir: 'test-results',
+      filename: 'report.md'
     }]
   ],
   // ... other configuration
@@ -49,10 +48,8 @@ npx playwright test
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `outputFile` | `string` | `'playwright-report.md'` | Path to the output Markdown file |
-| `includeStackTrace` | `boolean` | `true` | Include error stack traces in failed tests |
-| `includeAttachments` | `boolean` | `false` | Include test attachments (future feature) |
-| `customTitle` | `string` | `'Playwright Test Report'` | Custom title for the report |
+| `outputDir` | `string` | `'playwright-md-report'` | Directory where the report will be generated |
+| `filename` | `string` | `'index.md'` | Name of the output Markdown file |
 
 ## Example Output
 
