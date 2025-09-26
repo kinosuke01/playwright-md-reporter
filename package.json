@@ -1,6 +1,6 @@
 {
   "name": "@kinosuke01/playwright-md-reporter",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A Playwright test reporter that generates Markdown reports",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
