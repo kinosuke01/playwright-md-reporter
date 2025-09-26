@@ -2,7 +2,7 @@
 
 A Playwright test reporter that generates beautiful Markdown reports with test summaries, detailed results, and error information.
 
-[![npm version](https://badge.fury.io/js/playwright-md-reporter.svg)](https://badge.fury.io/js/playwright-md-reporter)
+[![npm version](https://badge.fury.io/js/@kinosuke01%2Fplaywright-md-reporter.svg)](https://badge.fury.io/js/@kinosuke01%2Fplaywright-md-reporter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
@@ -17,7 +17,7 @@ A Playwright test reporter that generates beautiful Markdown reports with test s
 ## Installation
 
 ```bash
-npm install --save-dev playwright-md-reporter
+npm install --save-dev @kinosuke01/playwright-md-reporter
 ```
 
 ## Usage
@@ -29,7 +29,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   reporter: [
-    ['playwright-md-reporter', {
+    ['@kinosuke01/playwright-md-reporter', {
       outputDir: 'test-results',
       filename: 'report.md'
     }]
